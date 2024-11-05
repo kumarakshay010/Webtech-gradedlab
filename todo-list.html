@@ -1,0 +1,177 @@
+<%@ page session="true" %>
+<%@ page import="java.util.ArrayList, java.util.List" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session To-Do List</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background-color: #f8f8f8;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .todo-text {
+            flex: 1;
+        }
+        
+        .delete-btn {
+            background-color: #ff4444;
+            padding: 0.5rem 1rem;
+        }
+        
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 1rem;
+        }
+        
+        .clear-all {
+            background-color: #ff4444;
+            display: block;
+            margin: 1rem auto 0;
+        }
+        
+        .clear-all:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <%
+        // Initialize the todo list in session if it doesn't exist
+        List<String> todoList = (List<String>) session.getAttribute("todoList");
+        if (todoList == null) {
+            todoList = new ArrayList<>();
+            session.setAttribute("todoList", todoList);
+        }
+        
+        // Handle form submissions
+        String action = request.getParameter("action");
+        if (action != null) {
+            if (action.equals("add")) {
+                String newItem = request.getParameter("item");
+                if (newItem != null && !newItem.trim().isEmpty()) {
+                    todoList.add(newItem.trim());
+                }
+            } else if (action.equals("delete")) {
+                int index = Integer.parseInt(request.getParameter("index"));
+                if (index >= 0 && index < todoList.size()) {
+                    todoList.remove(index);
+                }
+            } else if (action.equals("clear")) {
+                todoList.clear();
+            }
+        }
+    %>
+    
+    <div class="container">
+        <h1>My To-Do List</h1>
+        
+        <!-- Add Item Form -->
+        <form method="post" action="">
+            <div class="input-group">
+                <input type="text" name="item" placeholder="Enter a new task..." required>
+                <input type="hidden" name="action" value="add">
+                <button type="submit">Add Item</button>
+            </div>
+        </form>
+        
+        <!-- Todo List -->
+        <% if (todoList.isEmpty()) { %>
+            <p class="empty-message">Your to-do list is empty. Add some tasks to get started!</p>
+        <% } else { %>
+            <ul class="todo-list">
+                <% for (int i = 0; i < todoList.size(); i++) { %>
+                    <li class="todo-item">
+                        <span class="todo-text"><%= todoList.get(i) %></span>
+                        <form method="post" action="" style="margin: 0;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="index" value="<%= i %>">
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </li>
+                <% } %>
+            </ul>
+            
+            <!-- Clear All Button -->
+            <form method="post" action="">
+                <input type="hidden" name="action" value="clear">
+                <button type="submit" class="clear-all">Clear All</button>
+            </form>
+        <% } %>
+    </div>
+</body>
+</html>
